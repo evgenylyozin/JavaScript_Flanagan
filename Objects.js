@@ -31,3 +31,75 @@ let f = q.toString();
 console.log(f);
 console.log(q.x+q.y);
 
+//Варианты проверки наличия свойства в объекте
+
+let someObj = { x:1, };
+"x" in o; //true
+"toString" in o; //true
+
+// hasOwnProperty() возвращает false для унаследованных свойств
+
+let someObj2 = { x:1, };
+someObj2.hasOwnProperty('x'); //true
+someObj2.hasOwnProperty('toString'); //false
+
+// propertyIsEnumerable() возвращает true только для собственных свойст объекта + перечислимых свойств
+
+let someObj3 = { x:1, };
+someObj3.propertyIsEnumerable('x'); // true
+someObj3.propertyIsEnumerable('toString'); // false
+Object.prototуре.propertyIsEnumerable('toString'); // false (не перечислимое собственное свойство)
+
+//Сериализация объектов
+
+let objSource = {х:1, у: {z : [false, null, ""]}};
+let s = JSON.stringify(objSource);
+let p = JSON.parse(s);
+
+//Методы Object
+
+//toString()
+
+let point1 = {
+    x:1, y:2,
+    toString: function(){ return `(${this.x}, ${this.y})`; }
+};
+
+String(point1); // => "(1, 2)"
+
+//valueOf()
+
+let point2 = {
+    x:3, y:4,
+    valueOf: function(){ return Math.hypot(this.x,this.y); }
+};
+
+Number(point2); // => 5
+point2 > 4; // true
+point2 > 5; // false
+
+//toJSON()
+
+let point3 = {
+    x:1, y:2,
+    toString: function(){ return `(${this.x}, ${this.y})`; },
+    toJSON: function(){ return this.toString(); },
+};
+
+JSON.stringify([point3]); // => '["(1, 2)"]'
+
+// сборка объекта из переменных (ES6)
+
+let firstField = 1;
+let secondField = 2;
+let createdObject = { firstField, secondField };
+console.log(createdObject.firstField+createdObject.secondField); // => 3
+
+// вычислимые свойства (ES6)
+
+const PROP_NAME = "p1";
+function computePropName () { return "p" + 2 };
+let objWithComputedProps = {
+    [PROP_NAME]: 1,
+    [computePropName()]: 2,
+}
