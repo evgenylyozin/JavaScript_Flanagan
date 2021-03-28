@@ -21,9 +21,9 @@ let o3 = Object.create(Object.prototype); // Создание пустого о�
 
 //Наследование
 
-let obj = {};
-obj.x = 1;
-let p = Object.create(obj);
+let o12 = {};
+o12.x = 1;
+let p = Object.create(o12);
 p.y = 2;
 let q = Object.create(p);
 q.z = 3;
@@ -48,13 +48,13 @@ someObj2.hasOwnProperty('toString'); //false
 let someObj3 = { x:1, };
 someObj3.propertyIsEnumerable('x'); // true
 someObj3.propertyIsEnumerable('toString'); // false
-Object.prototуре.propertyIsEnumerable('toString'); // false (не перечислимое собственное свойство)
+// Object.prototуре.propertyIsEnumerable('toString'); // false (не перечислимое собственное свойство)
 
 //Сериализация объектов
 
 let objSource = {х:1, у: {z : [false, null, ""]}};
 let s = JSON.stringify(objSource);
-let p = JSON.parse(s);
+let parced = JSON.parse(s);
 
 //Методы Object
 
@@ -103,3 +103,10 @@ let objWithComputedProps = {
     [PROP_NAME]: 1,
     [computePropName()]: 2,
 }
+
+let someSymbol = Symbol('Test symbol');
+let testObjWithSymbol = {
+    [someSymbol]: 123,
+}
+console.log(testObjWithSymbol[someSymbol]);
+
