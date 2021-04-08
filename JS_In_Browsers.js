@@ -93,3 +93,36 @@ function textContent(e){
     }
     return s;
 }
+
+//Добавление элемента в 
+
+let paragraph = document.createElement("p");
+let emphasis = document.createElement("em");
+
+emphasis.append("World");//Добавить текст в элемент em
+paragraph.append("Hello ", emphasis, "!");
+paragraph.prepend("Hi! ");
+paragraph.innerHTML; // => "Hi! Hello <em>World</em>!"
+
+//Работа с CSS
+document.querySelector("#tooltip").classList.remove("hidden");
+document.querySelector("#tooltip").classList.add("hidden");
+
+//Установить тултип в определенном месте
+
+function displayAt(tooltip, x, y){
+    tooltip.style.display = "block";
+    tooltip.style.position = "absolute";
+    tooltip.style.left = `${x}px`;
+    tooltip.style.top = `${y}px`;
+}
+
+// Получение вычисляемого стиля элемента (все встроенные стили + стили таблиц и иные, которые браузер применил к элементу)
+
+let title = document.querySelector("section1title");
+let styles = window.getComputedStyle(title);
+let beforeStyles = window.getComputedStyle(title,"::before");
+
+// Геометрия и прокрутка документов
+
+
