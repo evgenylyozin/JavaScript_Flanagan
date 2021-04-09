@@ -125,4 +125,213 @@ let beforeStyles = window.getComputedStyle(title,"::before");
 
 // Геометрия и прокрутка документов
 
+title.getBoundingClientRect(); //Возвращает объект со свойствами left,right,top,bottom,width,height элемента
+title.getClientRects(); // Вернет массив объектов, похожих на объект, возвращаемый getBoundingClientRect(). Используется для встроенных элементов по типу em, span.
+
+//Используя координаты ОКНА ПРОСМОТРА можно вызвать метод document.elementFromPoint() для
+// получения элемента по заданным координатам
+// Вернёт самый внутренний (наиболее глубоко вложенный) и самый верхний по z-index элемент в данной точке
+
+//Прокрутка
+
+let documentHeight = document.documentElement.offsetHeight;
+let viewportHeight = window.innerHeight;
+//прокрутить до последней страницы документа
+window.scrollTo(0,documentHeight-viewportHeight);
+
+//прокрутка на определенное расстояние
+setInterval(()=>{scrollBy(0,50)},500);
+
+//Метод scrollIntoView() гарантирует, что элемент, на котором он вызван,
+//будет виден в окне просмотра
+
+//Размеры окон и прокрутки
+
+window.innerHeight; // Выдает высоту окна просмотра
+window.innerWidth; // Выдает ширину окна просмотра
+
+getBoundingClientRect(document.documentElement); // Вернет ширину и высоту всего документа
+document.documentElement.offsetHeight; // Вернет высоту всего документа
+document.documentElement.offsetWidth; // Вернет ширину всего документа
+
+window.scrollX; //Вернет смещение прокрутки документа по x
+window.scrollY; //Вернет смещение прокрутки документа по y
+
+//ДЛЯ ЭЛЕМЕНТОВ
+
+e.offsetWidth; //Возвращает экранный размер элемента в пикселях CSS, включает границу, отступы, но не поля
+e.offsetHeight; //Возвращает экранный размер элемента в пикселях CSS, включает границу, отступы, но не поля
+
+e.offsetLeft;
+e.ofsetTop; //Возвращают координаты X и Y элемента, для большинства относительно документа, для потомков позиционированных элементов - относительно предка
+e.offsetParent; //Указывает, относительно какого элемента заданы свойства
+
+e.clientWidth; // то же, что offset, но без учета границ
+e.clientHeight;
+
+e.scrollWidth; //Возвращает размер области содержимого элемента + отступы + размер выходящего за пределы содержимого
+e.scrollHeight;
+
+//ВЕБ-КОМПОНЕНТЫ
+
+//подключение
+<script type="module" src="components/search-box.js"></script>
+
+//применение
+<search-box placeholder="Search..."></search-box>
+
+//Компонент может поддерживать слоты
+<search-box>
+    <img src="src" slot="left"/>
+    <img src="src2" slot="right"/>
+</search-box>
+
+//специальные элементы
+
+customElements.define();//Определяет класс для кастомного дескриптора
+
+<p>
+    The document has ome marble: <inline-circle></inline-circle>.
+    The HTML parser instantiates two more marbles:
+    <inline-circle diameter="1.2em" color="blue"></inline-circle>
+    <inline-circle diameter=".6em" color="gold"></inline-circle>.
+    How many marbles does the document contain now?
+</p>
+
+//Реализация специального элемента <inline-circle>
+
+customElements.define("inline-circle", class InlineCircle extends HTMLElement{
+    //Когда элемент вставляется в документ
+    connectedCallback(){
+        this.style.display = "inline-block";
+        this.style.borderRadius = "50%";
+        this.style.border = "solid black 1px";
+        this.style.transform = "translateY(10%)";
+
+        if(!this.style.width){
+            this.style.width = "0.8em";
+            this.style.height = "0.8em";
+        }
+    }
+    // ObservedAttributes() указывает об изменении каких свойств мы хотим получать уведомления
+    static get observedAttributes(){return ["diameter","color"];}
+
+    //при изменении одного из отслеживаемых атрибутов вызывается этот колбэк:
+    attributeChangedCallback(name, oldValue, newValue){
+        switch(name){
+            case "diameter":
+                this.style.width = newValue;
+                this.style.height = newValue;
+                break;
+            case "color":
+                this.style.backgroundColor = newValue;
+                break;
+        }
+    }
+    //установка и получение атрибутов компонента
+    get diameter() {return this.getAttribute("diameter");}
+    set diameter(diameter) {this.setAttribute("diameter",diameter);}
+
+    get color() {return this.getAttribute("color");}
+    set color(color) {this.setAttribute("color",color);}
+})
+
+//Теневая модель DOM, превращение специального элемента в подлинный веб-компонент
+
+e.attachShadow({mode:"open"}); // Возвращает объект корневого элемента теневого дерева, а так же
+//устанавливает этот объект в качестве значения свойства shadowRoot ведущего элемента
+
+
+//Пример веб-компонента
+
+class SearchBox extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({mode:"open"});
+        this.shadowRoot.append(SearchBox.template.content.cloneNode(true));
+        
+        this.input = this.shadowRoot.querySelector("#input");
+        let leftSlot = this.shadowRoot.querySelector('slot[name="left"]');
+        let rightSlot = this.shadowRoot.querySelector('slot[name="right"]');
+        
+        this.input.onfocus = () => { this.setAttribute("focused", ""); };
+        this.input.onblur = () => { this.removeAttribute("focused"); };
+    
+        leftSlot.onclick = this.input.onchange = (event) => {
+            event.stopPropagation();
+            if (this.disabled) return;
+            this.dispatchEvent(new CustomEvent("search", {
+                detail: this.input.value
+            }));
+        };
+
+        rightSlot.onclick = (event) => {
+            event.stopPropagation();
+            if (this.disabled) return;
+            let e = new CustomEvent("clear", {cancelable: true});
+            this.dispatchEvent(e);
+            if(!e.defaultPrevented){
+                this.input.value="";
+            }
+        };
+
+        this.observedAttributes = ["disabled","placeholder","size","value"];
+    }
+
+    attributeChangedCallback(name, oldValue, newValue){
+        if(name === "disabled") {
+            this.input.disabled = newValue !== null;
+        } else if (name === "placeholder") {
+            this.input.placeholder = newValue;
+        } else if (name === "size") {
+            this.input.size = newValue;
+        } else if (name === "value") {
+            this.input.value = newValue;
+        }
+    }
+
+    get placeholder() {return this.getAttribute("placeholder");}
+    get disabled() {return this.getAttribute("disabled");}
+    get value() {return this.getAttribute("value");}
+    get size() {return this.getAttribute("size");}
+    get hidden() {return this.getAttribute("hidden");}
+
+    set placeholder(value) {this.setAttribute("placeholder",value);}
+    set disabled(value) {
+        if(value) this.setAttribute("disabled","");
+        else this.removeAttribute("disabled");
+    }
+    set value(text) {this.setAttribute("value",text);}
+    set size(value) {this.setAttribute("size",value);}
+    set hidden(value) {
+        if(value) this.setAttribute("hidden","");
+        else this.removeAttribute("hidden");
+    }
+
+    
+}
+
+SearchBox.template = document.createElement("template");
+SearchBox.template.innerHTML = `
+<style>
+/*
+* Селектор :host ссылается на <search-box> в световой модели DOM
+*/
+:host {
+
+}
+some styles
+</style>
+
+<div>
+    <slot name="left">\u{1f50d}</slot>
+    <input type="text" id="input" />
+    <slot name="right">\u{2573}</slot>
+</div>
+`;
+
+//регистрируем компонент
+
+customElements.define("search-box", SearchBox);
+
 
