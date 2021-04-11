@@ -368,6 +368,40 @@ history.pushState(); // + событие popstate
 
 // ВЗАИМОДЕЙСТВИЕ С СЕТЬЮ
 
+//fetch()
+
+fetch("/api/users/current")
+
+    .then(response => {
+        if(response.ok && response.headers.get("Content-Type") === "application/json") {
+            return response.json();
+        } else {
+            throw new Error(`Unexpected response status ${response.status} or content type`);
+        }
+    })
+
+    .then(currentUser => {
+        displayUserInfo(currentUser);
+    })
+
+    .catch(error => {
+        console.log("Error while fetching current user:", error);
+    });
+
+//установка параметров запроса
+
+async function search(term){
+    let url = new URL("/api/search");
+    url.searchParams.set("q",term);
+    let response = await fetch(url);
+    if(!response.ok) throw new Error(response.statusText);
+    let resultsArray = await response.json();
+    return resultsArray;
+}
+
+//Установка заголовков запроса
+
+
 
 
 
