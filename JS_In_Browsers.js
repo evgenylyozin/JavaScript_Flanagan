@@ -401,9 +401,139 @@ async function search(term){
 
 //Установка заголовков запроса
 
+let authHeaders = new Headers();
+authHeaders.set("Authorization", `Basic ${btoa(`${username}:${password}`)}`);
 
+fetch("url",{headers: authHeaders})
+.then(response => response.json())
+.then(usersList => displayUsers(usersList));
 
+let request = new Request(url, {headers:headers});
+fetch(request).then(response=>response);
 
+//Установка метода запроса
 
+fetch("url",{
+    method:"POST",
+    body:"Hello WOrld!",
+});
 
+fetch("url", {
+    method: "POST",
+    body: JSON.stringify(requestBody),
+    headers: new Headers({"Content-Type":"application/json"}),
+})
+
+//Прерывание выполнения запроса (AbortController)
+
+function fetchWithTimeout(url, options={}){
+    if(options.timeout){
+        let controller = new AbortController();
+        options.signal = controller.signal;
+        setTimeout(()=>{controller.abort();},options.timeout);
+    }
+    return fetch(url,options);
+}
+
+//СОБЫТИЯ, ПОСЫЛАЕМЫЕ СЕРВЕРОМ
+
+let ticker = new EventSource("stockprices.php");
+ticker.addEventListener("bid", (event) => {
+    displayNewBid(event.data);
+});
+
+//Простой чат клиент с использованием EventSource
+
+<html>
+    <head>
+        <title>SSE CHAT</title>
+    </head>
+    <body>
+        <input id="input"/>
+        <script>
+            let nick = prompt("Enter your nickname");
+            let input = document.querySelector("#input");
+            input.focus();
+
+            let chat = new EventSource("/chat");
+            chat.addEventListener("chat", event => {
+                let div = document.createElement("div");
+                div.append(event.data);
+                input.before(div);
+                input.scrollIntoView();
+            });
+
+            //Отправить сообщение пользователя на сервер
+            input.addEventListener("change",()=>{
+                fetch("/chat", {
+                    method: "POST",
+                    body: nick + ": " + input.value,
+                })
+                .catch(e=>console.error);
+
+                input.value="";
+            });
+        </script>
+    </body>
+</html>
+
+// Реализация серверной части чата (в среде Node)
+
+const http = require("http");
+const fs = require("fs");
+const url = require("url");
+
+const clientHTML = fs.readFileSync("chatClient.html");
+
+let clients = [];
+
+let server = new http.Server();
+server.listen(8080);
+
+server.on("request", (request,response)=>{
+    let pathname = url.parse(request.url).pathname;
+
+    if(pathname === "/"){
+        response.writeHead(200,{"Content-Type": "text/html"}).end(clientHTML)
+    }
+    else if (pathname !== "/chat" ||
+    (request.method !== "GET" && request.method !== "POST")) {
+        response.writeHead(404).end();
+    }
+    else if (request.method === "GET") {
+        acceptNewClient(request,response);
+    }
+    else {
+        broadcastNewMessage(request,response);
+    }
+});
+
+function acceptNewClient(request,response){
+    clients.push(response);
+    request.connection.on("end",()=>{
+        clients.splice(clients.indexOf(response),1);
+        response.end();
+    });
+    response.writeHead(200,{
+        "Content-Type": "text/event-stream",
+        "Connection": "keep-alive",
+        "Cache-Control": "no-cache",
+    });
+    response.write("event: chat\ndata: Connected\n\n");
+}
+
+async function broadcastNewMessage(request,response){
+    request.setEncoding("utf8");
+    let body = "";
+    for await (let chunk of request){
+        body+=chunk;
+    }
+    response.writeHead(200).end();
+    let message = "data: " + body.replace("\n", "\ndata: ");
+    let event = `event: chat\n${message}\n\n`;
+
+    clients.forEach(client=>client.write(event));
+}
+
+//ВЕБ-СОКЕТЫ
 
