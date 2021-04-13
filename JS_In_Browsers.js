@@ -537,3 +537,28 @@ async function broadcastNewMessage(request,response){
 
 //ВЕБ-СОКЕТЫ
 
+let socket = new WebSocket("wss://example.com/stockticker");
+
+//ХРАНИЛИЩЕ
+
+let name = localStorage.username;
+
+localStorage.clear();
+
+//Потоки воркеров и обмен сообщениями
+
+let dataCruncher = new Worker("utils/cruncher.js");
+dataCruncher.postMessage("/api/data/to/crunch");
+dataCruncher.onmessage = function(e){
+    let stats = e.data;
+    console.log(`Average ${stats.mean}`);
+}
+dataCruncher.terminate();
+
+// Импорт кода в воркерах
+
+// Перед началом работы загрузить необходимые классы и утилиты.
+importScripts("utils/Histogram.js", "utils/BitSet.js");
+
+
+
